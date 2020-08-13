@@ -11,13 +11,6 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    /*
-    Process.start('start', ['/wait', '/B', '.\\scripts\\pause.cmd'], runInShell: true, workingDirectory: '.').then((process) {
-      process.exitCode.then(print);
-      process.stdout.transform(utf8.decoder).listen((data) => print(data));
-    });
-    */
-
     return MaterialApp(
       title: 'Flutter Demo',
       home: SplashScreen(),
@@ -85,6 +78,37 @@ class InstallationScreen extends StatefulWidget {
 }
 
 class _InstallationScreenState extends State<InstallationScreen> {
+  String status = 'Installation is starting...';
+  String subStatus = '';
+  double progressValue;
+
+  void handleStdout(data) {
+    if (data.toString().contains('CAI: INSTALLER:')) {
+      status = data.toString().substring(15);
+      subStatus = '';
+      progressValue == null ? progressValue = 0.0 : progressValue += 0.2;
+    } else {
+      subStatus = data;
+    }
+    setState(() {});
+  }
+
+  void handleExit(exitCode) {
+    status = (exitCode == 0) ? 'Installation Complete !' : 'An unexpected error occured !';
+    subStatus = '';
+    progressValue = 1.0;
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    Process.start('START', ['/MIN', '/WAIT', '/B', '.\\scripts\\install.cmd'], runInShell: true, workingDirectory: '.').then((process) {
+      process.stdout.transform(utf8.decoder).listen((data) => handleStdout(data));
+      process.exitCode.then((value) => handleExit(value));
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,29 +123,45 @@ class _InstallationScreenState extends State<InstallationScreen> {
           ),
         ),
       ),
-      body: Center(
-        child: Column(
-          children: [
-            SizedBox(height: 150),
-            Text(
-              'Sample Text',
-              textScaleFactor: 3.0,
-              style: TextStyle(
-                color: Colors.green[900],
-                fontWeight: FontWeight.w600,
+      body: Padding(
+        padding: const EdgeInsets.all(5.0),
+        child: Center(
+          child: Column(
+            children: [
+              SizedBox(height: 150),
+              Text(
+                status,
+                textScaleFactor: 3.0,
+                style: TextStyle(
+                  color: Colors.green[900],
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            SizedBox(height: 100),
-            SizedBox(
-              height: 10.0,
-              width: 900.0,
-              child: LinearProgressIndicator(
-                backgroundColor: Colors.green[900].withOpacity(0.4),
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.green[900]),
-                value: null,
+              SizedBox(height: 100),
+              SizedBox(
+                height: 10.0,
+                width: 900.0,
+                child: LinearProgressIndicator(
+                  backgroundColor: Colors.green[900].withOpacity(0.4),
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green[900]),
+                  value: progressValue,
+                ),
               ),
-            ),
-          ],
+              SizedBox(height: 50),
+              Flexible(
+                child: Text(
+                  subStatus,
+                  textScaleFactor: 1.25,
+                  overflow: TextOverflow.fade,
+                  softWrap: true,
+                  style: TextStyle(
+                    color: Colors.green[900],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
