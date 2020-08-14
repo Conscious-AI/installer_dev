@@ -12,7 +12,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'CAI Installer',
+      debugShowCheckedModeBanner: false,
       home: SplashScreen(),
     );
   }
@@ -23,16 +24,70 @@ class SplashScreen extends StatefulWidget {
   _SplashScreenState createState() => _SplashScreenState();
 }
 
+Future<void> _showExitDialog(context) async {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Exit Installer'),
+        content: SingleChildScrollView(
+          child: ListBody(
+            children: <Widget>[
+              Text('Are you sure you want close the installer ?'),
+              Text('Any background installation won\'t continue after installer is closed.'),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          FlatButton(
+            color: Colors.green[900],
+            child: Text('Yes'),
+            onPressed: () {
+              //SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+              // Currently this doesn't work with windows so using exit(0)
+              exit(0);
+            },
+          ),
+          FlatButton(
+            color: Colors.green[900],
+            child: Text('No, continue with installation'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.green[900],
+        elevation: 0.0,
+        actions: [
+          IconButton(
+            tooltip: "Exit",
+            hoverColor: Colors.red,
+            splashRadius: 20.0,
+            icon: Icon(Icons.close),
+            onPressed: () {
+              _showExitDialog(context);
+            },
+          ),
+          SizedBox(width: 5.0),
+        ],
+      ),
       body: Container(
         color: Colors.green[900],
         child: Center(
           child: Column(
             children: [
-              SizedBox(height: 200.0),
+              SizedBox(height: 150.0),
               Text(
                 'Conscious AI',
                 textScaleFactor: 6.0,
@@ -122,6 +177,18 @@ class _InstallationScreenState extends State<InstallationScreen> {
             fontWeight: FontWeight.w500,
           ),
         ),
+        actions: [
+          IconButton(
+            tooltip: "Exit",
+            hoverColor: Colors.red,
+            splashRadius: 20.0,
+            icon: Icon(Icons.close),
+            onPressed: () {
+              _showExitDialog(context);
+            },
+          ),
+          SizedBox(width: 5.0),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(5.0),
