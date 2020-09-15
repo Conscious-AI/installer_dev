@@ -23,4 +23,9 @@ start /B /wait git_clone_script.cmd
 echo | set /p=CAI: INSTALLER: 5. Installing required project dependencies...
 start /B /wait pip_dependencies_script.cmd
 
+:: All done !
+echo. & echo.
+echo ------------------------------------------------ All Done ! ------------------------------------------------
+echo. & echo. & echo.
+
 exit
