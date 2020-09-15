@@ -1,8 +1,11 @@
 import 'dart:io';
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import 'InteractiveTerminalView.dart';
 
 void main() {
   runApp(MyApp());
@@ -134,23 +137,26 @@ class InstallationScreen extends StatefulWidget {
 
 class _InstallationScreenState extends State<InstallationScreen> {
   String status = 'Installation is starting...';
-  String subStatus = '';
   double progressValue;
+
+  // ignore: close_sinks
+  final StreamController streamController = StreamController<List>.broadcast();
+  List<String> dataList = [];
+  Process proc;
 
   void handleStdout(data) {
     if (data.toString().contains('CAI: INSTALLER:')) {
       status = data.toString().substring(15);
-      subStatus = '';
       progressValue == null ? progressValue = 0.0 : progressValue += 0.2;
     } else {
-      subStatus = data;
+      dataList.add(data);
+      streamController.add(dataList);
     }
     setState(() {});
   }
 
   void handleExit(exitCode) {
     status = (exitCode == 0) ? 'Installation Complete !' : 'An unexpected error occured !';
-    subStatus = '';
     progressValue = 1.0;
     setState(() {});
   }
@@ -215,17 +221,9 @@ class _InstallationScreenState extends State<InstallationScreen> {
                 ),
               ),
               SizedBox(height: 50),
-              Flexible(
-                child: Text(
-                  subStatus,
-                  textScaleFactor: 1.25,
-                  overflow: TextOverflow.fade,
-                  softWrap: true,
-                  style: TextStyle(
-                    color: Colors.green[900],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+              InteractiveTerminalView(
+                streamController: streamController,
+                process: proc,
               ),
             ],
           ),
