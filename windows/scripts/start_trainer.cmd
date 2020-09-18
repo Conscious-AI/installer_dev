@@ -1,4 +1,8 @@
 @echo off
 
+cd ..\..\trainer
+
 ::Starting command trainer
-..\trainer\trainer.exe
+trainer.exe
+
+exit
