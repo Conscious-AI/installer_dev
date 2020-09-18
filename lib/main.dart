@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import 'InteractiveTerminalView.dart';
 
@@ -49,6 +50,7 @@ Future<void> _showExitDialog(context) async {
             onPressed: () {
               //SystemChannels.platform.invokeMethod('SystemNavigator.pop');
               // Currently this doesn't work with windows so using exit(0)
+              Process.killPid(InstallScriptProc.proc.pid);
               exit(0);
             },
           ),
@@ -130,7 +132,16 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
+abstract class InstallScriptProc {
+  static Process proc;
+}
+
 class InstallationScreen extends StatefulWidget {
+  final int steps = 9;
+
+  // ignore: close_sinks
+  final StreamController streamController = StreamController<List>.broadcast();
+
   @override
   _InstallationScreenState createState() => _InstallationScreenState();
 }
@@ -138,33 +149,36 @@ class InstallationScreen extends StatefulWidget {
 class _InstallationScreenState extends State<InstallationScreen> {
   String status = 'Installation is starting...';
   double progressValue;
-
-  // ignore: close_sinks
-  final StreamController streamController = StreamController<List>.broadcast();
-  List<String> dataList = [];
-  Process proc;
+  List<String> dataList;
+  bool isFABVisible;
 
   void handleStdout(data) {
     if (data.toString().contains('CAI: INSTALLER:')) {
       status = data.toString().substring(15);
-      progressValue == null ? progressValue = 0.0 : progressValue += 0.2;
+      progressValue == null ? progressValue = 0.0 : progressValue += 1.0 / widget.steps;
     } else {
       dataList.add(data);
-      streamController.add(dataList);
+      widget.streamController.add(dataList);
     }
     setState(() {});
   }
 
   void handleExit(exitCode) {
     status = (exitCode == 0) ? 'Installation Complete !' : 'An unexpected error occured !';
-    progressValue = 1.0;
-    setState(() {});
+    setState(() {
+      progressValue = 1.0;
+      isFABVisible = true;
+    });
   }
 
   @override
   void initState() {
+    dataList = [];
+    isFABVisible = false;
     Process.start('START', ['/MIN', '/WAIT', '/B', '.\\scripts\\install.cmd'], runInShell: true, workingDirectory: '.').then((process) {
+      InstallScriptProc.proc = process;
       process.stdout.transform(utf8.decoder).listen((data) => handleStdout(data));
+	  process.stderr.transform(utf8.decoder).listen((data) => print("stderr: $data"));
       process.exitCode.then((value) => handleExit(value));
     });
     super.initState();
@@ -222,11 +236,26 @@ class _InstallationScreenState extends State<InstallationScreen> {
               ),
               SizedBox(height: 50),
               InteractiveTerminalView(
-                streamController: streamController,
-                process: proc,
+                streamController: widget.streamController,
+                process: InstallScriptProc.proc,
               ),
             ],
           ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Visibility(
+        visible: isFABVisible,
+        child: FloatingActionButton.extended(
+          backgroundColor: Colors.green[900],
+          foregroundColor: Colors.white,
+          icon: Icon(Icons.exit_to_app, size: 25.0),
+          label: Text("Finish", textScaleFactor: 2.0),
+          onPressed: () {
+            //SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+            // Currently this doesn't work with windows so using exit(0)
+            exit(0);
+          },
         ),
       ),
     );
