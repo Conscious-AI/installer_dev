@@ -8,7 +8,7 @@ RECT workArea;
 SystemParametersInfoA(SPI_GETWORKAREA, 0, &workArea, 0);
 
 // Aligning window at center
-Win32Window::Point origin((workArea.right / 2) - (kFlutterWindowWidth / 2), (workArea.bottom / 2) - (kFlutterWindowHeight / 2));
+Win32Window::Point origin((workArea.right / 2) - (1040 / 2), (workArea.bottom / 2) - (585 / 2));
 // Adjusting to right size
 Win32Window::Size size(1040, 585);
 ```
