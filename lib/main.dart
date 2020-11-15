@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -45,16 +46,21 @@ Future<void> _showExitDialog(context) async {
         ),
         actions: <Widget>[
           FlatButton(
+            padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
             color: Colors.green[900],
             child: Text('Yes'),
             onPressed: () {
-              //SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-              // Currently this doesn't work with windows so using exit(0)
-              Process.killPid(InstallScriptProc.proc.pid);
-              exit(0);
+              try {
+                Process.killPid(InstallScriptProc.proc.pid);
+              } finally {
+                // Temporary workaround for closing the release app
+                debugger();
+                exit(0);
+              }
             },
           ),
           FlatButton(
+            padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
             color: Colors.green[900],
             child: Text('No, continue with installation'),
             onPressed: () {
@@ -100,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               SizedBox(height: 150.0),
               OutlineButton(
-                padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+                padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
                 textColor: Colors.white,
                 borderSide: BorderSide(color: Colors.white),
                 child: Row(
@@ -178,7 +184,7 @@ class _InstallationScreenState extends State<InstallationScreen> {
     Process.start('START', ['/MIN', '/WAIT', '/B', '.\\scripts\\install.cmd'], runInShell: true, workingDirectory: '.').then((process) {
       InstallScriptProc.proc = process;
       process.stdout.transform(utf8.decoder).listen((data) => handleStdout(data));
-	  process.stderr.transform(utf8.decoder).listen((data) => print("stderr: $data"));
+      process.stderr.transform(utf8.decoder).listen((data) => print("stderr: $data"));
       process.exitCode.then((value) => handleExit(value));
     });
     super.initState();
@@ -252,8 +258,8 @@ class _InstallationScreenState extends State<InstallationScreen> {
           icon: Icon(Icons.exit_to_app, size: 25.0),
           label: Text("Finish", textScaleFactor: 2.0),
           onPressed: () {
-            //SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-            // Currently this doesn't work with windows so using exit(0)
+            // Temporary workaround for closing the release app
+            debugger();
             exit(0);
           },
         ),
